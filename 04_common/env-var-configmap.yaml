@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-var-config-map
+data:
+  SPRING_DATASOURCE_URL: "jdbc:oracle:thin:@18.219.29.63:1521/ORCL"
+  SPRING_DATASOURCE_USERNAME: "EQUITABLE"
+  SPRING_DATASOURCE_PASSWORD: "EQUITABLE"
+  SPRING_REDIS_HOST: "http://redis"  
+  SPRING_REDIS_PASSWORD: "SUPERSECRETPA55W0RD"
+  SPRINT_REDIS_PORT: "6379"
+  REDIRECT_URL: "http://user-interface:3000"
+  KEYCLOAK_URL: "https://keycloak:8443"
+  KEYCLOAK_REALM: "BDO"
+  KEYCLOAK_CLIENT_ID: "bdotransact"
+  KEYCLOAK_AUTHSERVERURL: "https://keycloak:8443"
+  KEYCLOAKADMIN_USERNAME: "adminservice"
+  KEYCLOAKADMIN_SERVER: "https://keycloak:8443"
+  KEYCLOAKADMIN_PASSWORD: "secretpwd"
+  BASE_URL: "http://bdotransact.tfstaging.com:3334"
+  CORESERVICE_IP: "10.1.5.181"
+  CORESERVICE_PORT: "7124"
+  CORS_URLS: "http://user-interface:3000"
+  CUSTOM_LOGSTASH_HOST: "bdotransact.tfstaging.com:5000"
+  ELASTICSEARCH_HOST: "bdotransact.tfstaging.com:9200"
+  ELASTICSEARCH_USERNAME: "elastic"
+  ELASTICSEARCH_PASSWORD: "aWweckxo956123bNWEfgh8456"

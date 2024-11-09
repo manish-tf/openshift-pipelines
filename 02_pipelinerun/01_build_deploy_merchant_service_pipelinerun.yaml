@@ -1,0 +1,33 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: build-and-deploy-merchant-service-pipelinerun
+spec:
+  pipelineRef:
+    name: build-and-deploy
+#  serviceAccountName: pipeline  # Specify the ServiceAccount here
+  params:
+  - name: deployment-name
+    value: merchant-service
+  - name: git-url
+    value: https://github.com/manish-tf/merchant-service
+  - name: IMAGE
+    value: image-registry.openshift-image-registry.svc:5000/maniz-tf-dev/merchant-service
+  workspaces:
+  - name: shared-workspace
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 500Mi
+#  - name: git-credentials
+#    secret:
+#      secretName: git-credentials
+  - name: git-basic-auth
+    secret:
+      secretName: my-basic-auth-secret
+#  - name: git-config
+#    configmap:
+#      name: gitconfig-cm

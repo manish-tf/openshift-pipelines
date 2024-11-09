@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: clone-repo-pipelinerun
+spec:
+  serviceAccountName: pipeline
+  pipelineRef:
+    name: clone-repo-pipeline
+  params:
+  - name: url
+    value: https://github.com/manish-tf/card-account-service.git
+  workspaces:
+    - name: git-auth
+      secret:
+        secretName: my-basic-auth-secret  # Link to the basic auth secret
+    - name: shared-workspace
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 500Mi

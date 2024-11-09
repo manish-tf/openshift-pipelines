@@ -1,8 +1,8 @@
 apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
-  name: vote-app
+  name: merchant-service-app
 spec:
   serviceAccountName: pipeline
   triggers:
-    - triggerRef: vote-trigger
+    - triggerRef: merchant-service-trigger

@@ -1,0 +1,25 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: clone-repo-pipeline
+spec:
+  workspaces:
+    - name: git-auth           # Workspace for Git authentication
+    - name: shared-workspace   # Workspace to store the cloned code
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: basic-auth
+          workspace: git-auth
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: url
+          value: <https-git-repo-url>  # Replace with your GitHub HTTPS repo URL
+        - name: revision
+          value: "main"  # or the branch you want to clone
+        - name: deleteExisting
+          value: "true"

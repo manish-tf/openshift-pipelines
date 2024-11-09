@@ -1,0 +1,93 @@
+# create task
+oc create -f /Users/manish/Documents/BDO-eclipse-workspace/openshift-pipelines/01_pipeline/01_apply_manifest_task.yaml
+
+# create task
+oc create -f /Users/manish/Documents/BDO-eclipse-workspace/openshift-pipelines/01_pipeline/02_update_deployment_task.yaml
+
+# create pipeline
+oc create -f /Users/manish/Documents/BDO-eclipse-workspace/openshift-pipelines/01_pipeline/04_pipeline.yaml
+
+# create pipeline run
+oc create -f /Users/manish/Documents/BDO-eclipse-workspace/openshift-pipelines/02_pipelinerun/01_build_deploy_merchant_service_pipelinerun.yaml
+
+# Encode id_rsa
+base64 -w 0 -i id_ed25520 > id_ed25520.b64
+
+# Encode known_hosts
+base64 -w 0 -i known_hosts > known_hosts.b64
+
+# Encode config (if you have it)
+base64 -w 0 -i config > config.b64
+
+base64 -w 0 -i .gitconfig > .gitconfig.b64
+
+oc apply -f git-credentials-secret.yaml
+
+#Deploy merchant-service first before starting pipeline build to generate image registry
+#S2I feature, it will generate a builConfig and imageConfig and a deployment and a service
+oc new-app git@github.com:manish-tf/merchant-service.git
+
+oc new-app https://github.com/youruser/yourgitrepo --source-secret=github-token-secret
+
+oc new-app https://github.com/manish-tf/user-interface.git --source-secret=github-token-secret --name=user-interface
+
+oc new-app git@github.com:manish-tf/network-service.git --source-secret=git-credentials
+
+
+# Run below command to check the S2I feature worked and generated k8s resources
+oc get bc
+oc get pods
+oc get deployment
+
+# after adding github-secret manually in the buildConfig, run below commands
+oc expose deployment merchant-service --port=8080 --name=merchant-service
+oc expose service merchant-service
+
+#check if service and routes are created now 
+oc get svc
+oc get routes
+
+# pipeline run for merchant service
+tkn pipeline start build-and-deploy \
+    --prefix-name build-and-deploy-merchant-service-pipelinerun \
+    --workspace name=shared-workspace,volumeClaimTemplateFile=/Users/manish/Documents/BDO-eclipse-workspace/openshift-pipelines/01_pipeline/03_persistent_volume_claim.yaml \
+    --workspace name=git-credentials,secret=git-credentials \
+    -p deployment-name=merchant-service \
+    -p git-url=git@github.com:manish-tf/merchant-service.git \
+    -p git-revision=main \
+    -p IMAGE=image-registry.openshift-image-registry.svc:5000/maniz-tf-dev/merchant-service \
+    --use-param-defaults
+    
+    
+tkn pipeline start build-and-deploy \
+    --prefix-name build-and-deploy-merchant-service-pipelinerun \
+    --workspace name=shared-workspace,volumeClaimTemplateFile=/Users/manish/Documents/BDO-eclipse-workspace/openshift-pipelines/01_pipeline/03_persistent_volume_claim.yaml \
+    --workspace name=git-basic-auth,secret=my-basic-auth-secret \
+    -p deployment-name=merchant-service \
+    -p git-url=https://github.com/manish-tf/merchant-service \
+    -p git-revision=main \
+    -p IMAGE=image-registry.openshift-image-registry.svc:5000/maniz-tf-dev/merchant-service \
+    --use-param-defaults
+    
+oc annotate secret mysecret 'build.openshift.io/source-secret-match-uri-1=ssh://bitbucket.atlassian.com:7999/*'
+
+oc set build-secret --source bc/merchant-service my-basic-auth-secret
+
+# Git SSH Auth Documentation
+https://docs.openshift.com/container-platform/4.17/cicd/builds/creating-build-inputs.html
+
+# git secret command for ssh auth
+oc create secret generic <secret_name> --from-file=ssh-privatekey=<path/to/ssh/private/key> --from-file=<path/to/known_hosts> --type=kubernetes.io/ssh-auth
+
+#for debugging and access pod terminal
+oc debug -t deployment/merchant-service
+ssh -T git@github.com
+
+# create env variables configMap
+oc apply -f /Users/manish/Documents/BDO-eclipse-workspace/openshift-pipelines/01_pipeline/env-var-configmap.yaml
+
+#set config map to supply env variables to the pod
+oc set env deployment/merchant-service --from=configmap/env-var-config-map
+
+# merchant service image registry path
+image-registry.openshift-image-registry.svc:5000/maniz-tf-dev/merchant-service:latest

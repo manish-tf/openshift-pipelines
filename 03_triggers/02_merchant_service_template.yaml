@@ -1,14 +1,14 @@
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
-  name: vote-app
+  name: merchant-service-app
 spec:
   params:
   - name: git-repo-url
     description: The git repository url
   - name: git-revision
     description: The git revision
-    default: master
+    default: main
   - name: git-repo-name
     description: The name of the deployment to be created / patched
 
@@ -40,3 +40,6 @@ spec:
             resources:
               requests:
                 storage: 500Mi
+      - name: git-basic-auth
+        secret:
+          secretName: my-basic-auth-secret
